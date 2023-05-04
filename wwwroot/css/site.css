@@ -20,3 +20,17 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+.charts div {
+    width: 47%;
+    float: left;
+    margin-bottom: 3%;
+}
+
+.chart {
+    height: 300px;
+}
+
+.charts div:nth-child(3n+1) {
+    margin-right: 6%;
+}

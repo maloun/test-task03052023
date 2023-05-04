@@ -19,12 +19,9 @@ namespace demo.Controllers
 			return JsonConvert.SerializeObject(_charts.GetHousesData(from, to));			
 		}
 	
-		[HttpGet]
-		public ActionResult GetPlantsData(DateTime from, DateTime to)
+		public string GetPlantsData(DateTime from, DateTime to)
 		{
-			var jsonStr = JsonConvert.SerializeObject(_charts.GetPlantsData(from, to));
-
-			return Json(jsonStr, "application/json");
+			return JsonConvert.SerializeObject(_charts.GetPlantsData(from, to));
 		}
 
 		[HttpGet]

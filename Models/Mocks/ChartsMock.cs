@@ -43,7 +43,7 @@ namespace demo.Models.Mocks
 				.OrderByDescending(c => c.UploadDateTime)
 				.FirstOrDefault()
 				.Consumptions
-				.Where(d => d.Date > from && d.Date < to)
+				.Where(d => d.Date >= from && d.Date <= to)
 				.ToList();
 
 			if (data.Count == 0)
@@ -53,20 +53,26 @@ namespace demo.Models.Mocks
 
 			return new ChartData()
 			{
-				Data = data.Select(c => (c.Date, c.Weather)),
+				Data = from d in data select new ChartPoint() { x = d.Date, y = d.Weather},
 
-				Forecast = data.Select(c => (c.Date, coeffs.intercept + coeffs.slope * c.Date.Ticks)),
+				Forecast = from d in data select new ChartPoint() {
+					x = d.Date,
+					y = coeffs.intercept + coeffs.slope * d.Date.Ticks
+				},
 
-				Linear = (
-					st: (
-						data.Min(dp => dp.Date),
-						coeffs.intercept + coeffs.slope * data.Min(dp => dp.Date).Ticks
-					),
-					en: (
-						data.Max(dp => dp.Date),
-						coeffs.intercept + coeffs.slope * data.Max(dp => dp.Date).Ticks
-					)
-				)
+				Linear = new Linear()
+				{
+					st = new ChartPoint()
+					{
+						x = data.Min(dp => dp.Date),
+						y = coeffs.intercept + coeffs.slope * data.Min(dp => dp.Date).Ticks
+					},
+					en = new ChartPoint()
+					{
+						x = data.Max(dp => dp.Date),
+						y = coeffs.intercept + coeffs.slope * data.Max(dp => dp.Date).Ticks
+					}
+				}
 			};
 
 			/*
@@ -120,21 +126,30 @@ namespace demo.Models.Mocks
 
 			return new ChartData()
 			{
-				Data = data.Select(c => (c.Date, c.Price)),
+				Data = from d in data select new ChartPoint() { x = d.Date, y = d.Price },
 
-				Forecast = data.Select(c => (c.Date, coeffs.intercept + coeffs.slope * c.Date.Ticks)),
+				Forecast = from d in data
+						   select new ChartPoint()
+						   {
+							   x = d.Date,
+							   y = coeffs.intercept + coeffs.slope * d.Date.Ticks
+						   },
 
-				Linear = (
-					st: (
-						data.Min(dp => dp.Date), 
-						coeffs.intercept + coeffs.slope * data.Min(dp => dp.Date).Ticks
-					),
-					en: (
-						data.Max(dp => dp.Date), 
-						coeffs.intercept + coeffs.slope * data.Max(dp => dp.Date).Ticks
-					)
-				)
+				Linear = new Linear()
+				{
+					st = new ChartPoint()
+					{
+						x = data.Min(dp => dp.Date),
+						y = coeffs.intercept + coeffs.slope * data.Min(dp => dp.Date).Ticks
+					},
+					en = new ChartPoint()
+					{
+						x = data.Max(dp => dp.Date),
+						y = coeffs.intercept + coeffs.slope * data.Max(dp => dp.Date).Ticks
+					}
+				}
 			};
+			
 
 			/*
 			//List<double> prices = dataPoints.Select(d => d.Price).ToList();

@@ -33,4 +33,8 @@
     <Folder Include="wwwroot\upload\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="wwwroot\js\Charts.js" />
+  </ItemGroup>
+
 </Project>
