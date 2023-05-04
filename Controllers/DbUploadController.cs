@@ -1,21 +1,29 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
-using testtask_tplus.Models;
+﻿using demo.Views.DbUpload;
+using Microsoft.AspNetCore.Mvc;
+using demo.Models.Interfaces;
 
-namespace testtask_tplus.Controllers
+namespace demo.Controllers
 {
     public class DbUploadController : Controller
     {
-        private readonly ILogger<DbUploadController> _logger;
+        private IDbUpload _dbUpload;
 
-        public DbUploadController(ILogger<DbUploadController> logger)
+        public DbUploadController(IDbUpload dbUpload)
         {
-            _logger = logger;
+            _dbUpload = dbUpload;
         }
 
-        public ViewResult Index()
+        [HttpGet]
+        public ViewResult UploadFile()
         {
-            return View();
+            return View(new UploadFilePostData());
+        }
+
+        [HttpPost]
+        public async Task<ObjectResult> UploadFile(UploadFilePostData data)
+        {
+            return await _dbUpload.UploadFile(data);
+            //return Redirect("/Charts/Index");            
         }
     }
 }

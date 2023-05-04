@@ -1,0 +1,29 @@
+﻿@using demo.Views.DbUpload
+@model UploadFilePostData
+
+<h3>загрузите xml файл данных</h3>
+
+<form method="POST" enctype="multipart/form-data">
+    <input asp-for="File" /><br /><br />
+    <input type="submit" />
+</form>
+
+<script>    
+    $("form").on("submit", function (e) {
+        e.preventDefault();
+        $.ajax({
+            url: $(this).attr('action'),
+            type: 'POST',
+            data: new FormData(this),
+            processData: false,
+            contentType: false, 
+            success: function (data) {
+                alert(data.message);
+                window.location.href = "/Charts/Index";
+            },
+            error: function (data) {
+                alert(JSON.parse(data.responseText).error);
+            }
+        })
+    });
+</script>

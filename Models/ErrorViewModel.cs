@@ -1,4 +1,4 @@
-namespace testtask_tplus.Models
+namespace demo.Models
 {
     public class ErrorViewModel
     {

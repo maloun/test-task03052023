@@ -1,12 +1,19 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using demo.Models.Interfaces;
 
-namespace testtask_tplus.Controllers
+namespace demo.Controllers
 {
     public class ChartsController : Controller
     {
+        ICharts _charts;
+        public ChartsController(ICharts charts)
+        {
+            _charts = charts;
+        }
+
         public ViewResult Index()
         {
-            return View();
+            return View(_charts.GetChartsData());
         }
     }
 }
