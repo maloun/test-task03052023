@@ -12,7 +12,7 @@ using demo.Models;
 namespace demo.Models.Database.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20230503193734_InitialCreate")]
+    [Migration("20230504171904_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -24,56 +24,6 @@ namespace demo.Models.Database.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("demo.Models.Database.Tables.PlantsConsumersTable", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ConsumerId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UploadDateTime")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("PlantsConsumersTables");
-                });
-
-            modelBuilder.Entity("demo.Models.Database.Tables.PlantsConsumptionsTable", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ConsumerId")
-                        .HasColumnType("int");
-
-                    b.Property<double>("Consumption")
-                        .HasColumnType("float");
-
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("datetime2");
-
-                    b.Property<double>("Price")
-                        .HasColumnType("float");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ConsumerId");
-
-                    b.ToTable("PlantsConsumptionsTables");
-                });
 
             modelBuilder.Entity("demo.Models.Database.Tables.HouseConsumersTable", b =>
                 {
@@ -95,7 +45,7 @@ namespace demo.Models.Database.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("HouseConsumersTables");
+                    b.ToTable("HouseConsumers");
                 });
 
             modelBuilder.Entity("demo.Models.Database.Tables.HouseConsumptionsTable", b =>
@@ -122,18 +72,57 @@ namespace demo.Models.Database.Migrations
 
                     b.HasIndex("ConsumerId");
 
-                    b.ToTable("HouseConsumptionsTables");
+                    b.ToTable("HouseConsumptions");
+                });
+
+            modelBuilder.Entity("demo.Models.Database.Tables.PlantsConsumersTable", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ConsumerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UploadDateTime")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PlantsConsumers");
                 });
 
             modelBuilder.Entity("demo.Models.Database.Tables.PlantsConsumptionsTable", b =>
                 {
-                    b.HasOne("demo.Models.Database.Tables.PlantsConsumersTable", "Consumer")
-                        .WithMany("Consumptions")
-                        .HasForeignKey("ConsumerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
 
-                    b.Navigation("Consumer");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ConsumerId")
+                        .HasColumnType("int");
+
+                    b.Property<double>("Consumption")
+                        .HasColumnType("float");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<double>("Price")
+                        .HasColumnType("float");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConsumerId");
+
+                    b.ToTable("PlantsConsumptions");
                 });
 
             modelBuilder.Entity("demo.Models.Database.Tables.HouseConsumptionsTable", b =>
@@ -147,12 +136,23 @@ namespace demo.Models.Database.Migrations
                     b.Navigation("Consumer");
                 });
 
-            modelBuilder.Entity("demo.Models.Database.Tables.PlantsConsumersTable", b =>
+            modelBuilder.Entity("demo.Models.Database.Tables.PlantsConsumptionsTable", b =>
+                {
+                    b.HasOne("demo.Models.Database.Tables.PlantsConsumersTable", "Consumer")
+                        .WithMany("Consumptions")
+                        .HasForeignKey("ConsumerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Consumer");
+                });
+
+            modelBuilder.Entity("demo.Models.Database.Tables.HouseConsumersTable", b =>
                 {
                     b.Navigation("Consumptions");
                 });
 
-            modelBuilder.Entity("demo.Models.Database.Tables.HouseConsumersTable", b =>
+            modelBuilder.Entity("demo.Models.Database.Tables.PlantsConsumersTable", b =>
                 {
                     b.Navigation("Consumptions");
                 });

@@ -22,8 +22,7 @@ namespace demo.Controllers
         [HttpPost]
         public async Task<ObjectResult> UploadFile(UploadFilePostData data)
         {
-            return await _dbUpload.UploadFile(data);
-            //return Redirect("/Charts/Index");            
+            return await _dbUpload.UploadFile(data);      
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿namespace demo.Models.Database.Tables
 {
     public class HouseConsumersTable
-    {
+    {        
         public int Id { get; set; }
 
         public string Name { get; set; }

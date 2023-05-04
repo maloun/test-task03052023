@@ -4,9 +4,12 @@ namespace demo.Models.Interfaces
 {
     public interface ICharts
 	{
-		public ChartsData GetChartsData();
+		public ChartData GetHousesData(DateTime from, DateTime to);
 
-		public AxisData GetHousesData();
-		public AxisData GetPlantsData();
-    }
+		public ChartData GetPlantsData(DateTime from, DateTime to);
+
+		public (DateTime from, DateTime to) GetHouseLimits();
+
+		public (DateTime from, DateTime to) GetPlantsLimits();
+	}
 }

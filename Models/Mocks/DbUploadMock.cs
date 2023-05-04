@@ -1,14 +1,9 @@
-﻿using Azure;
-using demo.Models.Database.Tables;
+﻿using demo.Models.Database.Tables;
 using demo.Views.DbUpload;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using System.Globalization;
-using System.IO;
 using System.Xml.Linq;
-using demo.Models.Database.Tables;
 using demo.Models.Interfaces;
-using static System.Reflection.Metadata.BlobBuilder;
 
 namespace demo.Models.Mocks
 {
@@ -101,7 +96,6 @@ namespace demo.Models.Mocks
 
             return consumer;
         }
-
 
         public void UploadXmlToDatabase(XDocument xml)
         {

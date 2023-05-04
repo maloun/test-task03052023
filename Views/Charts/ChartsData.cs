@@ -1,25 +1,24 @@
 ﻿namespace demo.Views.Charts
 {
+	public class ChartsLimits
+	{
+		public (DateTime from, DateTime to) HouseLimits;
+
+		public (DateTime from, DateTime to) PlantsLimits;
+	}
+
 	public class ChartPoint
 	{
-		public DateTime AxisX;
-
-		public Double AxisY;
-
-		public Double AxisZ;
+		public DateTime x; 
+		public double y;
 	}
 
-	public class AxisData
+	public class ChartData
 	{
-		public IEnumerable<ChartPoint> Data;
+		public IEnumerable<(DateTime x, double y)> Data;
 
-		public int Period;
-	}
+		public IEnumerable<(DateTime x, double y)> Forecast;
 
-	public class ChartsData
-	{
-		public AxisData Houses;
-
-		public AxisData Plants;
+		public ((DateTime x, double y) st, (DateTime x, double y) en) Linear;
 	}
 }

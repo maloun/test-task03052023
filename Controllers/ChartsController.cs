@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using demo.Models.Interfaces;
+using demo.Views.Charts;
+using Newtonsoft.Json;
 
 namespace demo.Controllers
 {
@@ -11,9 +13,27 @@ namespace demo.Controllers
             _charts = charts;
         }
 
-        public ViewResult Index()
+        [HttpGet]
+		public string GetHouseData(DateTime from, DateTime to)
+		{
+			return JsonConvert.SerializeObject(_charts.GetHousesData(from, to));			
+		}
+	
+		[HttpGet]
+		public ActionResult GetPlantsData(DateTime from, DateTime to)
+		{
+			var jsonStr = JsonConvert.SerializeObject(_charts.GetPlantsData(from, to));
+
+			return Json(jsonStr, "application/json");
+		}
+
+		[HttpGet]
+		public ViewResult Index()
         {
-            return View(_charts.GetChartsData());
+			return View(new ChartsLimits() { 
+                HouseLimits = _charts.GetHouseLimits(),   
+                PlantsLimits = _charts.GetPlantsLimits()
+            });			
         }
     }
 }

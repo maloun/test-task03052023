@@ -12,7 +12,7 @@ namespace demo.Models.Database.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "HouseConsumersTables",
+                name: "HouseConsumers",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -23,11 +23,11 @@ namespace demo.Models.Database.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_HouseConsumersTables", x => x.Id);
+                    table.PrimaryKey("PK_HouseConsumers", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "PlantsConsumersTables",
+                name: "PlantsConsumers",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -38,11 +38,11 @@ namespace demo.Models.Database.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_PlantsConsumersTables", x => x.Id);
+                    table.PrimaryKey("PK_PlantsConsumers", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "HouseConsumptionsTables",
+                name: "HouseConsumptions",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -54,17 +54,17 @@ namespace demo.Models.Database.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_HouseConsumptionsTables", x => x.Id);
+                    table.PrimaryKey("PK_HouseConsumptions", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_HouseConsumptionsTables_HouseConsumersTables_ConsumerId",
+                        name: "FK_HouseConsumptions_HouseConsumers_ConsumerId",
                         column: x => x.ConsumerId,
-                        principalTable: "HouseConsumersTables",
+                        principalTable: "HouseConsumers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "PlantsConsumptionsTables",
+                name: "PlantsConsumptions",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -76,23 +76,23 @@ namespace demo.Models.Database.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_PlantsConsumptionsTables", x => x.Id);
+                    table.PrimaryKey("PK_PlantsConsumptions", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_PlantsConsumptionsTables_PlantsConsumersTables_ConsumerId",
+                        name: "FK_PlantsConsumptions_PlantsConsumers_ConsumerId",
                         column: x => x.ConsumerId,
-                        principalTable: "PlantsConsumersTables",
+                        principalTable: "PlantsConsumers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_HouseConsumptionsTables_ConsumerId",
-                table: "HouseConsumptionsTables",
+                name: "IX_HouseConsumptions_ConsumerId",
+                table: "HouseConsumptions",
                 column: "ConsumerId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PlantsConsumptionsTables_ConsumerId",
-                table: "PlantsConsumptionsTables",
+                name: "IX_PlantsConsumptions_ConsumerId",
+                table: "PlantsConsumptions",
                 column: "ConsumerId");
         }
 
@@ -100,16 +100,16 @@ namespace demo.Models.Database.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "HouseConsumptionsTables");
+                name: "HouseConsumptions");
 
             migrationBuilder.DropTable(
-                name: "PlantsConsumptionsTables");
+                name: "PlantsConsumptions");
 
             migrationBuilder.DropTable(
-                name: "HouseConsumersTables");
+                name: "HouseConsumers");
 
             migrationBuilder.DropTable(
-                name: "PlantsConsumersTables");
+                name: "PlantsConsumers");
         }
     }
 }
