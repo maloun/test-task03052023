@@ -30,10 +30,11 @@ b.	Форма отображения графиков (график потреб
 
 Файлы миграции находятся в папке Models/Database/Migrations
 
-- sql файл 
-создан командой: dotnet ef migrations script -o ./Models/Database/Migrations/InitialCreate.sql
+- sql файл создан командой: 
+> dotnet ef migrations script -o ./Models/Database/Migrations/InitialCreate.sql
 запускается: Sql Server Managment Studio (SSMS)
 
-- cs файл создан командой
-dotnet ef migrations add InitialCreate --output-dir "Models/Database/Migrations"
-запускается: dotnet ef database update
+- cs файл создан командой:
+> dotnet ef migrations add InitialCreate --output-dir "Models/Database/Migrations"
+запускается: 
+> dotnet ef database update
