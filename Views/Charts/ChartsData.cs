@@ -8,22 +8,16 @@
 
 	public class ChartPoint
 	{
-		public DateTime x; 
+		public DateTime x;
 		public double y;
-	}
-
-	public class Linear
-	{
-		public ChartPoint st;
-		public ChartPoint en;
 	}
 
 	public class ChartData
 	{
-		public IEnumerable<ChartPoint> Data;
+		public IEnumerable<ChartPoint> Consumption;
+
+		public IEnumerable<ChartPoint> LinearTrand;
 
 		public IEnumerable<ChartPoint> Forecast;
-
-		public Linear Linear;
 	}
 }

@@ -1,111 +1,109 @@
 ﻿@using demo.Views.Charts
 @model ChartsLimits
-<!DOCTYPE HTML>
-<html>
-<head>
 
-</head>
-<body>
-	<div class="charts">
-		<div>
-			с <input id="HouseFrom" class="HouseFilter" type="date" />
-			по <input id="HouseTo" class="HouseFilter" type="date" />
-		</div>
-		<div>
-			с <input id="PlantsFrom" class="PlantsFilter" type="date" />
-			по <input id="PlantsTo" class="PlantsFilter" type="date" />
-		</div>
+<script src="~/js/canvasjs.min.js"></script>
+<script src="~/js/Charts.js"></script>
 
-		<div id="housesConsumption" class="chart"></div>
-		<div id="plantsConsumption" class="chart"></div>
-		<br/>
-		<div id="housesTrands" class="chart"></div>
-		<div id="plantsTrands" class="chart"></div>
-		<br/>
-		<div id="housesForecast" class="chart"></div>
-		<div id="plantsForecast" class="chart"></div>
+<div class="container">
+<div class="charts">
+	<div>
+		с <input id="HouseFrom" class="HouseFilter" type="date" />
+		по <input id="HouseTo" class="HouseFilter" type="date" />
+	</div>
+	<div>
+		с <input id="PlantsFrom" class="PlantsFilter" type="date" />
+		по <input id="PlantsTo" class="PlantsFilter" type="date" />
 	</div>
 
-	<script>		
-		var PlantsConsumption, 
-			PlantsConsumption, 
-			HousesTrands, 
-			PlantsTrands,
-			HousesForecast, 
-			PlantsForecast;
+	<div id="housesConsumption" class="chart"></div>
+	<div id="plantsConsumption" class="chart"></div>
+	<br/>
+	<div id="housesTrands" class="chart"></div>
+	<div id="plantsTrands" class="chart"></div>
+	<br/>
+	<div id="housesForecast" class="chart"></div>
+	<div id="plantsForecast" class="chart"></div>	
+</div>
+</div>
+<script>
+	var HousesConsumption = null,
+		PlantsConsumption = null,
+		HousesTrands = null,
+		PlantsTrands = null,
+		HousesForecast = null,
+		PlantsForecast = null;
 
-		function RequestHouseData() {
-			var fromDate = HouseFrom.value.toString();
-			var toDate = HouseTo.value.toString();
-			if (HouseFrom.oldValue == fromDate && HouseTo.oldValue == toDate) return;
-			HouseFrom.oldValue = fromDate;
-			HouseTo.oldValue = toDate;
+	function RequestHouseData() {
+		var filterDate = filtersToStrObj(HouseFrom, HouseTo);
+		if (!EnsureFiltersChanged(HouseFrom, HouseTo)) return;
 
-			$.ajax({
-				url: "/Charts/GetHouseData?from=" + fromDate + "&to=" + toDate,
-				type: 'GET',
-				processData: false,
-				contentType: false,
-				success: function (data) {
-					data = JSON.parse(data);
-
-					if (HousesConsumption.data[0].dataPoints.length > 0)					
-						HousesConsumption.destroy();
+		$.ajax({
+			url: "/Charts/GetHouseData?from=" + filterDate.from + "&to=" + filterDate.to,
+			type: 'GET',
+			error:  (data) => alert("ошибка загрузки"),
+			success: function (data) 
+			{
+				data = JSON.parse(data);
 					
-					for (var i = 0; i < data.Data.length; i++){
-						HousesConsumption.data[0].dataPoints.push(
-							{ x: Date.parse(data.Data[i].x), y:data.Data[i].y }
-						);
-					}
-					HousesConsumption.render();					
-				},
-				error: function (data) {
-					alert("не удалось загрузить данные");
-				}
-			});			
-		}
-
-		function RequestPlantsData() {
-			var fromDate = PlantsFrom.value.toString();
-			var toDate = PlantsTo.value.toString();
-			if (PlantsFrom.oldValue == fromDate && PlantsTo.oldValue == toDate) return;
-			PlantsFrom.oldValue = fromDate;
-			PlantsTo.oldValue = toDate;
-						
-			$.ajax({
-				url: "/Charts/GetPlantsData?from=" + fromDate + "&to=" + toDate,
-				type: 'GET',
-				data: new FormData(this),
-				processData: false,
-				contentType: false,
-				success: function (data) {
-					alert(data);
-					//window.location.href = "/Charts/Index";
-				},
-				error: function (data) {
-					alert(data);
-					//alert(JSON.parse(data.responseText).error);
-				}
-			})
-		}
-
-		$(document).ready(function () {
-			$("#HouseFrom").val("@Model.HouseLimits.from.ToString("yyyy-MM-dd")");
-			$("#HouseTo").val("@Model.HouseLimits.to.ToString("yyyy-MM-dd")");
-			$("#PlantsFrom").val("@Model.PlantsLimits.from.ToString("yyyy-MM-dd")");
-			$("#PlantsTo").val("@Model.PlantsLimits.to.ToString("yyyy-MM-dd")");
-			$(".HouseFilter").on("focusout", RequestHouseData);
-			$(".PlantsFilter").on("focusout", RequestPlantsData);
-			HousesConsumption = newChart("housesConsumption", "1", "2", "3");
-			PlantsConsumption = newChart("plantsConsumption", "1", "2", "3");
-			HousesTrands = newChart("housesTrands", "1", "2", "3");
-			PlantsTrands = newChart("plantsTrands", "1", "2", "3");
-			HousesForecast = newChart("housesForecast", "1", "2", "3");
-			PlantsForecast = newChart("plantsForecast", "1", "2", "3");	
+				renderChart(HousesConsumption, () => newChart(
+					"housesConsumption", "Потребление (дома)", "DD MMM YY", "Погода", [
+						newAxis("потребление тепла", "#F08080", data.Consumption)])
+				);
+				renderChart(HousesTrands, () => newChart(
+					"housesTrands", "Тренд (дома)", "DD MMM YY", "Погода", [
+					newAxis("потребление тепла", "#DDDDDD", data.Consumption),
+					newAxis("тренд", "#F08080", data.LinearTrand)
+				])
+				);
+				renderChart(HousesForecast, () => newChart(
+					"housesForecast", "Прогноз (дома)", "DD MMM YY", "Погода", [
+					newAxis("потребление тепла", "#DDDDDD", data.Consumption),
+					newAxis("тренд", "#5F7CBB", data.Forecast)
+				])
+				);		
+			}
 		});
-				
-	</script>
-	<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
-	<script src="~/js/Charts.js"></script>
-</body>
-</html>
+	}
+		
+	function RequestPlantsData() {
+		var filterDate = filtersToStrObj(PlantsFrom, PlantsTo);
+		if (!EnsureFiltersChanged(PlantsFrom, PlantsTo)) return;
+
+		$.ajax({
+			url: "/Charts/GetPlantsData?from=" + filterDate.from + "&to=" + filterDate.to,
+			type: 'GET',
+			error: (data) => alert("ошибка загрузки"),
+			success: function (data) {
+				data = JSON.parse(data);
+					
+				renderChart(PlantsConsumption, () => newChart(
+					"plantsConsumption", "Потребление (заводы)", "DD MMM YY", "Погода", [
+					newAxis("потребление тепла", "#F08080", data.Consumption)])
+				);
+				renderChart(PlantsTrands, () => newChart(
+					"plantsTrands", "Тренд (заводы)", "DD MMM YY", "Погода", [
+					newAxis("потребление тепла", "#DDDDDD", data.Consumption),
+					newAxis("тренд", "#F08080", data.LinearTrand)
+					])
+				);
+				renderChart(PlantsForecast, () => newChart(
+					"plantsForecast", "Прогноз (заводы)", "DD MMM YY", "Погода", [
+					newAxis("потребление тепла", "#DDDDDD", data.Consumption),
+					newAxis("тренд", "#5F7CBB", data.Forecast)
+					])
+				);					
+			}
+		});
+	}			
+
+	$(document).ready(function () {
+		$("#HouseFrom").val("@Model.HouseLimits.from.ToString("yyyy-MM-dd")");
+		$("#HouseTo").val("@Model.HouseLimits.to.ToString("yyyy-MM-dd")");
+		$("#PlantsFrom").val("@Model.PlantsLimits.from.ToString("yyyy-MM-dd")");
+		$("#PlantsTo").val("@Model.PlantsLimits.to.ToString("yyyy-MM-dd")");
+		$(".HouseFilter").on("focusout", RequestHouseData);
+		$(".PlantsFilter").on("focusout", RequestPlantsData);
+		RequestHouseData();
+		RequestPlantsData();
+	});				
+</script>
