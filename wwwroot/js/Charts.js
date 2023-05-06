@@ -1,22 +1,28 @@
-﻿function newAxis(_name, _color, _data)
+﻿function newAxis(_name, _color, _data, _type, _marker)
 {
+	console.log(_data);
+
 	var obj = {
-		type: "line",
+		type: _type,
 		showInLegend: true,
 		name: _name,
-		markerType: "line",
-		xValueFormatString: "DD MMM, YYYY",
+		markerType: _marker,
+		//xValueFormatString: "DD MMM, YYYY",
 		color: _color,
 		dataPoints: []
 	};
 	for (var i = 0; i < _data.length; i++) {
-		var point = { x: new Date(Date.parse(_data[i].x)), y: _data[i].y };
+		var point = {
+			x: _data[i].x,
+			y: _data[i].y,
+			indexLabel: _data[i].title != undefined ? _data[i].title : null
+		}; //new Date(Date.parse())
 		obj.dataPoints.push(point);
 	}
 	return obj;
 }
 
-function newChart(id, Name, XName, YName, dataSeries)
+function newChart(id, Name, XName, YName, markerType, dataSeries)
 {
 	var data = [];
 	for (var i = 0; i < dataSeries.length; i++)
@@ -26,8 +32,9 @@ function newChart(id, Name, XName, YName, dataSeries)
 	var options = {
 		zoomEnabled: true,
 		animationEnabled: true,
+		markerType: markerType,
 		title: { text: Name },
-		axisX: { valueFormatString: XName, crosshair: { enabled: true, snapToDataPoint: true } },
+		axisX: { title: XName, crosshair: { enabled: true, snapToDataPoint: true } },
 		axisY: { title: YName, includeZero: true, crosshair: { enabled: true } },
 		data: data  // random data
 	};

@@ -14,23 +14,16 @@ namespace demo.Controllers
         }
 
         [HttpGet]
-		public string GetHouseData(DateTime from, DateTime to)
+		public string GetChartsData(DateTime from, DateTime to)
 		{
-			return JsonConvert.SerializeObject(_charts.GetHousesData(from, to));			
+			return JsonConvert.SerializeObject(_charts.GetChartsData(from, to));			
 		}
 	
-		public string GetPlantsData(DateTime from, DateTime to)
-		{
-			return JsonConvert.SerializeObject(_charts.GetPlantsData(from, to));
-		}
-
 		[HttpGet]
 		public ViewResult Index()
         {
-			return View(new ChartsLimits() { 
-                HouseLimits = _charts.GetHouseLimits(),   
-                PlantsLimits = _charts.GetPlantsLimits()
-            });			
+            var obj = _charts.GetDefaultLimits();
+			return View(obj);			
         }
     }
 }
