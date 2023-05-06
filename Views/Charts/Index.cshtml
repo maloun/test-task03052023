@@ -7,103 +7,74 @@
 <div class="container">
 <div class="charts">
 	<div>
-		с <input id="HouseFrom" class="HouseFilter" type="date" />
-		по <input id="HouseTo" class="HouseFilter" type="date" />
-	</div>
-	<div>
-		с <input id="PlantsFrom" class="PlantsFilter" type="date" />
-		по <input id="PlantsTo" class="PlantsFilter" type="date" />
+		с <input id="filterFrom" class="filter" type="date" />
+		по <input id="filterTo" class="filter" type="date" />
 	</div>
 
-	<div id="housesConsumption" class="chart"></div>
-	<div id="plantsConsumption" class="chart"></div>
-	<br/>
-	<div id="housesTrands" class="chart"></div>
-	<div id="plantsTrands" class="chart"></div>
-	<br/>
-	<div id="housesForecast" class="chart"></div>
-	<div id="plantsForecast" class="chart"></div>	
+	<div id="linearHouses" class="chart"></div>
+	<div id="linearPlants" class="chart"></div>	
+	<div id="cityForecast" style="font-size:40px"></div>
+	<div id="cityConsumptions" class="chart"></div>
+	<div id="consumptionsPie" class="chart"></div>
 </div>
 </div>
 <script>
-	var HousesConsumption = null,
-		PlantsConsumption = null,
-		HousesTrands = null,
-		PlantsTrands = null,
-		HousesForecast = null,
-		PlantsForecast = null;
+	var LinearHouses = null,
+		LinearPlants = null,
+		CityForecast = null,
+		CityConsumptions = null,
+		ConsumptionsPie = null;
 
-	function RequestHouseData() {
-		var filterDate = filtersToStrObj(HouseFrom, HouseTo);
-		if (!EnsureFiltersChanged(HouseFrom, HouseTo)) return;
+	function RequestChartsData() {
+		var filterDate = filtersToStrObj(filterFrom, filterTo);
+		if (!EnsureFiltersChanged(filterFrom, filterTo)) return;
 
 		$.ajax({
-			url: "/Charts/GetHouseData?from=" + filterDate.from + "&to=" + filterDate.to,
+			url: "/Charts/GetChartsData?from=" + filterDate.from + "&to=" + filterDate.to,
 			type: 'GET',
 			error:  (data) => alert("ошибка загрузки"),
 			success: function (data) 
 			{
 				data = JSON.parse(data);
+
+				console.log(data);
+				renderChart(LinearHouses, () => newChart(
+					"linearHouses", "Потребление тепла домами и погода", "Потребление тепла", "Температура", "circle",
+					[newAxis("потребление домов", "#F08080", data.LinearHouses, "scatter", "circle")]
+				));
+
+				renderChart(LinearPlants, () => newChart(
+					"linearPlants", "Потребление тепла заводами и цена на тепло", "Потребление тепла", "Температура", "circle",
+					[newAxis("потребление заводов", "#5eaac4", data.LinearPlants, "scatter", "circle")]
+				));
+
+				cityForecast.innerHTML = 
+					"<br/>Прогноз потребления тепла городом на " + 
+					"<b>" + data.CityForecast.x.replace("T00:00:00", "")+ ":</b>"+
+					"<br/>" + data.CityForecast.y.toString() + "<br/><br/>";					
 					
-				renderChart(HousesConsumption, () => newChart(
-					"housesConsumption", "Потребление (дома)", "DD MMM YY", "Погода", [
-						newAxis("потребление тепла", "#F08080", data.Consumption)])
-				);
-				renderChart(HousesTrands, () => newChart(
-					"housesTrands", "Тренд (дома)", "DD MMM YY", "Погода", [
-					newAxis("потребление тепла", "#DDDDDD", data.Consumption),
-					newAxis("тренд", "#F08080", data.LinearTrand)
-				])
-				);
-				renderChart(HousesForecast, () => newChart(
-					"housesForecast", "Прогноз (дома)", "DD MMM YY", "Погода", [
-					newAxis("потребление тепла", "#DDDDDD", data.Consumption),
-					newAxis("тренд", "#5F7CBB", data.Forecast)
-				])
-				);		
+				renderChart(CityConsumptions, () => newChart(
+					"cityConsumptions", "График потребления тепла городом", "", "Погода", undefined,
+					[
+						newAxis("потребление города", "#8ea3ce", data.CityConsumptions.Sum, "line", "line"),
+						newAxis("потребление домов", "#b95052", data.CityConsumptions.Houses, "column", "fill"),
+						newAxis("потребление заводов", "#F08080", data.CityConsumptions.Plants, "column", "fill")
+					]
+				));
+
+				renderChart(CityConsumptions, () => newChart(
+					"consumptionsPie", "Соотношение потребления тепла в городе", "", "Погода", undefined,
+					[newAxis("потребление города", null	, data.CityConsumptions.Pie, "pie", "pie")]
+				));
 			}
 		});
 	}
-		
-	function RequestPlantsData() {
-		var filterDate = filtersToStrObj(PlantsFrom, PlantsTo);
-		if (!EnsureFiltersChanged(PlantsFrom, PlantsTo)) return;
-
-		$.ajax({
-			url: "/Charts/GetPlantsData?from=" + filterDate.from + "&to=" + filterDate.to,
-			type: 'GET',
-			error: (data) => alert("ошибка загрузки"),
-			success: function (data) {
-				data = JSON.parse(data);
-					
-				renderChart(PlantsConsumption, () => newChart(
-					"plantsConsumption", "Потребление (заводы)", "DD MMM YY", "Погода", [
-					newAxis("потребление тепла", "#F08080", data.Consumption)])
-				);
-				renderChart(PlantsTrands, () => newChart(
-					"plantsTrands", "Тренд (заводы)", "DD MMM YY", "Погода", [
-					newAxis("потребление тепла", "#DDDDDD", data.Consumption),
-					newAxis("тренд", "#F08080", data.LinearTrand)
-					])
-				);
-				renderChart(PlantsForecast, () => newChart(
-					"plantsForecast", "Прогноз (заводы)", "DD MMM YY", "Погода", [
-					newAxis("потребление тепла", "#DDDDDD", data.Consumption),
-					newAxis("тренд", "#5F7CBB", data.Forecast)
-					])
-				);					
-			}
-		});
-	}			
+				
 
 	$(document).ready(function () {
-		$("#HouseFrom").val("@Model.HouseLimits.from.ToString("yyyy-MM-dd")");
-		$("#HouseTo").val("@Model.HouseLimits.to.ToString("yyyy-MM-dd")");
-		$("#PlantsFrom").val("@Model.PlantsLimits.from.ToString("yyyy-MM-dd")");
-		$("#PlantsTo").val("@Model.PlantsLimits.to.ToString("yyyy-MM-dd")");
-		$(".HouseFilter").on("focusout", RequestHouseData);
-		$(".PlantsFilter").on("focusout", RequestPlantsData);
-		RequestHouseData();
-		RequestPlantsData();
+		$("#filterFrom").val("@Model.from.ToString("yyyy-MM-dd")");
+		$("#filterTo").val("@Model.to.ToString("yyyy-MM-dd")");
+		$(".filter").on("focusout", RequestChartsData);
+		RequestChartsData();
 	});				
 </script>
