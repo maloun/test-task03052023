@@ -51,13 +51,13 @@ namespace demo.Models.Mocks
             }
         }
 
-        public HouseConsumersTable ParseHouseConsumer(XElement element)
+        public HouseConsumersTable ParseHouseConsumer(XElement element, DateTime _UploadDateTime)
         {
             var consumer = new HouseConsumersTable()
             {
                 Name = element.Element("Name").Value,
                 ConsumerId = Int32.Parse(element.Element("ConsumerId").Value),
-                UploadDateTime = DateTime.Now,
+                UploadDateTime = _UploadDateTime,
                 Consumptions = new List<HouseConsumptionsTable>()
             };
                         
@@ -74,13 +74,13 @@ namespace demo.Models.Mocks
             return consumer;
         }
 
-        public PlantsConsumersTable ParsePlantsConsumer(XElement element)
+        public PlantsConsumersTable ParsePlantsConsumer(XElement element, DateTime _UploadDateTime)
         {
             var consumer = new PlantsConsumersTable()
             {
                 Name = element.Element("Name").Value,
                 ConsumerId = Int32.Parse(element.Element("ConsumerId").Value),
-                UploadDateTime = DateTime.Now,
+                UploadDateTime = _UploadDateTime,
                 Consumptions = new List<PlantsConsumptionsTable>()
             };
 
@@ -99,16 +99,17 @@ namespace demo.Models.Mocks
 
         public void UploadXmlToDatabase(XDocument xml)
         {
+            var UploadTime = DateTime.Now;
             foreach (var element in xml.Root.Elements())
             {            
                 switch (element.Name.ToString())
                 {
                     case "houses":
-                        _dbContext.HouseConsumers.Add(ParseHouseConsumer(element));
+                        _dbContext.HouseConsumers.Add(ParseHouseConsumer(element, UploadTime));
                         break;
 
                     case "plants":
-                        _dbContext.PlantsConsumers.Add(ParsePlantsConsumer(element));
+                        _dbContext.PlantsConsumers.Add(ParsePlantsConsumer(element, UploadTime));
                         break;
                         
                     default:

@@ -9,9 +9,9 @@ namespace demo.Models.Interfaces
     {
         public Task<ObjectResult> UploadFile(UploadFilePostData data);
 
-        public HouseConsumersTable ParseHouseConsumer(XElement element);
+        public HouseConsumersTable ParseHouseConsumer(XElement element, DateTime _UploadDateTime);
 
-        public PlantsConsumersTable ParsePlantsConsumer(XElement element);
+        public PlantsConsumersTable ParsePlantsConsumer(XElement element, DateTime _UploadDateTime);
 
         public void UploadXmlToDatabase(XDocument xml);
     }
