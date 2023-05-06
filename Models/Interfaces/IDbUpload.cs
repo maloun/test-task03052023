@@ -2,7 +2,6 @@
 using demo.Views.DbUpload;
 using Microsoft.AspNetCore.Mvc;
 using System.Xml.Linq;
-using demo.Models.Database.Tables;
 
 namespace demo.Models.Interfaces
 {

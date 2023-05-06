@@ -2,10 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using demo.Models.Interfaces;
 using static System.Runtime.InteropServices.JavaScript.JSType;
-using Newtonsoft.Json.Linq;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Reflection;
 
 namespace demo.Models.Mocks
 {
@@ -59,9 +55,26 @@ namespace demo.Models.Mocks
 			return (slope, intercept);
 		}
 
-		public ChartData GetChartData<T>(ICollection<T> data, DateTime from, 
-			DateTime to, double alpha = 0.3) 
+		public ChartData GetChartsData(DateTime from, DateTime to)
 		{
+			var houseLastUpload = _dbContext.HouseConsumers.Max(c => c.UploadDateTime);
+			var dataHouses = _dbContext.HouseConsumers
+				.Include(p => p.Consumptions)
+				.Where(c => c.UploadDateTime == houseLastUpload)
+				.SelectMany(c => c.Consumptions)
+				.Where(d => d.Date >= from && d.Date <= to)
+				.OrderBy(d => d.Date)
+				.ToList();
+
+			var plantsLastUpload = _dbContext.PlantsConsumers.Max(c => c.UploadDateTime);
+			var dataPlants = _dbContext.PlantsConsumers
+				.Include(p => p.Consumptions)
+				.Where(c => c.UploadDateTime == plantsLastUpload)
+				.SelectMany(c => c.Consumptions)
+				.Where(d => d.Date >= from && d.Date <= to)
+				.OrderBy(d => d.Date)
+				.ToList();
+
 			/*
 			// сглаживание - скользящее окно, размер окна 15
 			var window = 15;
@@ -72,7 +85,8 @@ namespace demo.Models.Mocks
 					(a, b) => new TimePoint() { x = b, y = a }
 				).ToList();
 
-			// сглаживание - экспоненциальное 			
+			// сглаживание - экспоненциальное 	
+			double alpha = 0.3
 			smooth = smooth.Select((value, index) =>
 			{
 				if (index == 0)
@@ -84,7 +98,8 @@ namespace demo.Models.Mocks
 						y = alpha * value.y + (1 - alpha) * smooth.ElementAt(index - 1).y,
 					};
 			}).ToList();
-						
+
+			
 			// сезонность  
 			var values = smooth.Select(d => d.y).ToList();
 			var average = values.Average();
@@ -93,74 +108,18 @@ namespace demo.Models.Mocks
 				  .Select((value, index) => new { value, index })
 				  .Where((value, index) => index < half)
 				  .GroupBy(item => values[item.index + half], item => item.value)
-				  .Select(group => group.Sum() / average / 12)
+				  .Select(group => group.Sum() / average / 2)
 				  .ToArray();
-			
-			var coeffs = CalcLinearRegressionCoefficients(smooth, d => d.x.Ticks, d => d.y);
-
-			return new ChartData()
-			{
-				Consumption = data;
-				
-				LinearTrand = new List<DatePoint>() {
-					new DatePoint() {
-						x = data.Min(dp => dp.x),
-						y = coeffs.intercept + coeffs.slope * data.Min(dp => dp.x).Ticks
-					},
-					new DatePoint() {
-						x = data.Max(dp => dp.x),
-						y = coeffs.intercept + coeffs.slope * data.Max(dp => dp.x).Ticks
-					}
-				},
-
-				Forecast = smooth
-					.Where((value, index) => index < seasonality.Length)
-					.Select((value, index) => new DatePoint()
-					{
-						x = value.x.AddDays(smooth.Count),
-						y = (coeffs.intercept + coeffs.slope * value.x.Ticks) * seasonality[index]
-					})
-			};
 			*/
-			throw new NotImplementedException();
-		}
 
-		public ChartData GetChartsData(DateTime from, DateTime to)
-		{			
-			var dataHouses = _dbContext.HouseConsumers
-				.Include(p => p.Consumptions)
-				.OrderByDescending(c => c.UploadDateTime)
-				.FirstOrDefault()
-				.Consumptions
-				.Where(d => d.Date >= from && d.Date <= to)
-				.OrderBy(d => d.Date)
-				.ToList();
-		
-			var dataPlants = _dbContext.PlantsConsumers
-				.Include(p => p.Consumptions)
-				.OrderByDescending(c => c.UploadDateTime)
-				.FirstOrDefault()
-				.Consumptions
-				.Where(d => d.Date >= from && d.Date <= to)
-				.OrderBy(d => d.Date)
-				.ToList();
-			
 			var conHouses = _dbContext.HouseConsumptions.Select(d => new TimePoint() { x = d.Date, y = d.Consumption });
 			var conPlants = _dbContext.PlantsConsumptions.Select(d => new TimePoint() { x = d.Date, y = d.Consumption });
 			var conCity = conHouses.Concat(conPlants).OrderBy(d => d.x).ToList();
 						
 			var coeffs = CalcLinearRegressionCoefficients(conCity, d => d.x.Ticks, d => d.y);
-
-						
-
-			var cityConsumptions = new CityConsumption()
-			{
-				Sum = new ValuePoint[] {
-						new ValuePoint(){ x = 0, y = conCity.Sum(d => d.y) },
-						new ValuePoint(){ x = 4, y = conCity.Sum(d => d.y) }
-					}.ToList(),
-
-				Houses = _dbContext.HouseConsumptions
+								
+			var sum = conCity.Sum(d => d.y);
+			var houses = _dbContext.HouseConsumptions
 					.Include(p => p.Consumer)
 					.Where(d => d.Date >= from && d.Date <= to)
 					.AsEnumerable()
@@ -170,9 +129,9 @@ namespace demo.Models.Mocks
 						title = g.Key,
 						x = index,
 						y = g.Sum(x => x.Consumption)
-					}).ToList(),
+					}).ToList();
 
-				Plants = _dbContext.PlantsConsumptions
+			var plants = _dbContext.PlantsConsumptions
 					.Include(p => p.Consumer)
 					.Where(d => d.Date >= from && d.Date <= to)
 					.AsEnumerable()
@@ -182,23 +141,7 @@ namespace demo.Models.Mocks
 						title = g.Key,
 						x = index,
 						y = g.Sum(x => x.Consumption)
-					}).ToList()
-			};
-			var sum = cityConsumptions.Sum.First().y;
-			var houses = cityConsumptions.Houses;
-			var plants = cityConsumptions.Plants;
-			var pie = new List<NameValue>();
-
-			foreach (var h in cityConsumptions.Houses)
-			{
-				pie.Add(new NameValue() { y = h.y / sum * 100, title = h.title } );
-			}
-
-			foreach (var p in cityConsumptions.Plants)
-			{
-				pie.Add(new NameValue() { y = p.y / sum * 100, title = p.title } );
-			}
-			cityConsumptions.Pie = pie.ToArray();
+					}).ToList();
 
 			return new ChartData()
 			{
@@ -227,7 +170,20 @@ namespace demo.Models.Mocks
 				},
 
 				// график потребления города
-				CityConsumptions = cityConsumptions
+				CityConsumptions = new CityConsumption()
+				{
+					Sum = new ValuePoint[] {
+						new ValuePoint(){ x = 0, y =  sum},
+						new ValuePoint(){ x = 4, y = sum }
+					}.ToList(),
+					Houses = houses,
+					Plants = plants,
+					Pie = houses
+					.Select(h => new NameValue() { y = h.y / sum * 100, title = h.title })
+					.Concat(
+						plants.Select(p => new NameValue() { y = p.y / sum * 100, title = p.title })
+					)
+				}
 			};
 		}
 
