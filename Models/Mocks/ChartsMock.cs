@@ -1,7 +1,7 @@
 ﻿using demo.Views.Charts;
 using Microsoft.EntityFrameworkCore;
 using demo.Models.Interfaces;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using Microsoft.AspNetCore.Mvc;
 
 namespace demo.Models.Mocks
 {
@@ -57,132 +57,58 @@ namespace demo.Models.Mocks
 
 		public ChartData GetChartsData(DateTime from, DateTime to)
 		{
+			// получаем последние данные потребления по домам, по фильтру в список ChartPoint 
 			var houseLastUpload = _dbContext.HouseConsumers.Max(c => c.UploadDateTime);
-			var dataHouses = _dbContext.HouseConsumers
-				.Include(p => p.Consumptions)
-				.Where(c => c.UploadDateTime == houseLastUpload)
-				.SelectMany(c => c.Consumptions)
-				.Where(d => d.Date >= from && d.Date <= to)
-				.OrderBy(d => d.Date)
-				.ToList();
+			var dataHouses = _dbContext.HouseConsumptions
+				.Include(h => h.Consumer)
+				.Where(d => d.Consumer.UploadDateTime == houseLastUpload &&
+					   d.Date >= from && d.Date <= to)
+				.AsEnumerable().Select(d => ChartPoint.FromHouse(d));
 
+			// получаем последние данные потребления по заводам, по фильтру в список ChartPoint 
 			var plantsLastUpload = _dbContext.PlantsConsumers.Max(c => c.UploadDateTime);
-			var dataPlants = _dbContext.PlantsConsumers
-				.Include(p => p.Consumptions)
-				.Where(c => c.UploadDateTime == plantsLastUpload)
-				.SelectMany(c => c.Consumptions)
-				.Where(d => d.Date >= from && d.Date <= to)
-				.OrderBy(d => d.Date)
-				.ToList();
+			var dataPlants = _dbContext.PlantsConsumptions
+				.Include(h => h.Consumer)
+				.Where(d => d.Consumer.UploadDateTime == houseLastUpload &&
+					   d.Date >= from && d.Date <= to)
+				.AsEnumerable().Select(d => ChartPoint.FromPlants(d));
 
-			/*
-			// сглаживание - скользящее окно, размер окна 15
-			var window = 15;
-			var smooth = data
-				.AverageWindow(window, d => d.y)
-				.Zip(
-					data.Select(d => d.x.AddDays(window)),
-					(a, b) => new TimePoint() { x = b, y = a }
-				).ToList();
-
-			// сглаживание - экспоненциальное 	
-			double alpha = 0.3
-			smooth = smooth.Select((value, index) =>
-			{
-				if (index == 0)
-					return value;
-				else
-					return new TimePoint()
-					{
-						x = value.x,
-						y = alpha * value.y + (1 - alpha) * smooth.ElementAt(index - 1).y,
-					};
-			}).ToList();
-
+			// получаем данные по городу, объединением заводов и домов  
+			var dataCity = dataHouses.ToArray().Concat(dataPlants.ToArray()).OrderBy(d => d.date);
 			
-			// сезонность  
-			var values = smooth.Select(d => d.y).ToList();
-			var average = values.Average();
-			var half = values.Count / 2;
-			var seasonality = smooth.Select(d => d.y)
-				  .Select((value, index) => new { value, index })
-				  .Where((value, index) => index < half)
-				  .GroupBy(item => values[item.index + half], item => item.value)
-				  .Select(group => group.Sum() / average / 2)
-				  .ToArray();
-			*/
-
-			var conHouses = _dbContext.HouseConsumptions.Select(d => new TimePoint() { x = d.Date, y = d.Consumption });
-			var conPlants = _dbContext.PlantsConsumptions.Select(d => new TimePoint() { x = d.Date, y = d.Consumption });
-			var conCity = conHouses.Concat(conPlants).OrderBy(d => d.x).ToList();
-						
-			var coeffs = CalcLinearRegressionCoefficients(conCity, d => d.x.Ticks, d => d.y);
+			// считаем коофиценты для линейной регрессии по городу из даты и потребления
+			var coeffs = CalcLinearRegressionCoefficients(dataCity.ToArray(), d => d.date.Ticks, d => d.y);
 								
-			var sum = conCity.Sum(d => d.y);
-			var houses = _dbContext.HouseConsumptions
-					.Include(p => p.Consumer)
-					.Where(d => d.Date >= from && d.Date <= to)
-					.AsEnumerable()
-					.GroupBy(d => d.Consumer.Name)
-					.Select((g, index) => new NameValue()
-					{
-						title = g.Key,
-						x = index,
-						y = g.Sum(x => x.Consumption)
-					}).ToList();
-
-			var plants = _dbContext.PlantsConsumptions
-					.Include(p => p.Consumer)
-					.Where(d => d.Date >= from && d.Date <= to)
-					.AsEnumerable()
-					.GroupBy(d => d.Consumer.Name)
-					.Select((g, index) => new NameValue()
-					{
-						title = g.Key,
-						x = index,
-						y = g.Sum(x => x.Consumption)
-					}).ToList();
+			// считаем сумму тепла по городу, группируем дома и заводы по имени и сумме показаний
+			var sum = dataCity.Sum(d => d.y);
+			var houses = dataHouses.GroupBy(d => d.title)
+				.Select((g, i) => new ChartPoint() { title = g.Key, x = i, y = g.Sum(v => v.y) });
+			var plants = dataPlants.GroupBy(d => d.title)
+				.Select((g, i) => new ChartPoint() { title = g.Key, x = i, y = g.Sum(v => v.y) });
 
 			return new ChartData()
 			{
-				// линейная зависимость потребления от температуры
-				LinearHouses = dataHouses
-					.Where(d => d.Date >= from && d.Date <= to)
-					.OrderBy(d => d.Weather).Select(d => new ValuePoint()
-					{
-						x = d.Weather,
-						y = d.Consumption
-					}),
+				// линейная зависимость потребления от температуры для домов
+				LinearHouses = dataHouses.OrderBy(d => d.x),
 
-				// линейная зависимость потребления от цены
-				LinearPlants = dataPlants
-					.Where(d => d.Date >= from && d.Date <= to)
-					.OrderBy(d => d.Price).Select(d => new ValuePoint()
-					{
-						x = d.Price,
-						y = d.Consumption
-					}),
+				// линейная зависимость потребления от цены для заводов
+				LinearPlants = dataPlants.OrderBy(d => d.x),
 
 				// прогноз потребления города на следующий день
-				CityForecast = new TimePoint() {
-					x = conCity.Max(d => d.x).AddDays(1),
-					y = coeffs.intercept + coeffs.slope * conCity.Max(d => d.x).Ticks
+				CityForecast = new ChartPoint() {
+					date = dataCity.Max(d => d.date).AddDays(1),
+					y = coeffs.intercept + coeffs.slope * dataCity.Max(d => d.date).Ticks
 				},
 
 				// график потребления города
 				CityConsumptions = new CityConsumption()
 				{
-					Sum = new ValuePoint[] {
-						new ValuePoint(){ x = 0, y =  sum},
-						new ValuePoint(){ x = 4, y = sum }
-					}.ToList(),
-					Houses = houses,
-					Plants = plants,
+					Sum = houses.Select((v,i) => new ChartPoint { x = i, y = sum }),
+					Houses = houses.ToList(),
+					Plants = plants.ToList(),
 					Pie = houses
-					.Select(h => new NameValue() { y = h.y / sum * 100, title = h.title })
-					.Concat(
-						plants.Select(p => new NameValue() { y = p.y / sum * 100, title = p.title })
-					)
+						.Select(h => new ChartPoint() { y = h.y / sum * 100, title = h.title })
+						.Concat(plants.Select(p => new ChartPoint() { y = p.y / sum * 100, title = p.title }))
 				}
 			};
 		}
@@ -209,7 +135,6 @@ namespace demo.Models.Mocks
 				from = new DateTime(Math.Max(pMin.Ticks, hMin.Ticks)),
 				to = new DateTime(Math.Min(pMax.Ticks, hMax.Ticks))
 			};
-		}
-			
+		}			
 	}
 }

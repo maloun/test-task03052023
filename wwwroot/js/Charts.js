@@ -1,7 +1,7 @@
 ﻿function newAxis(_name, _color, _data, _type, _marker)
 {
 	console.log(_data);
-
+	var chartsWithName = ["pie", "column"];
 	var obj = {
 		type: _type,
 		showInLegend: true,
@@ -12,11 +12,13 @@
 		dataPoints: []
 	};
 	for (var i = 0; i < _data.length; i++) {
+		_name = chartsWithName.indexOf(_type) != -1 ? _data[i].title : null;
 		var point = {
 			x: _data[i].x,
 			y: _data[i].y,
-			indexLabel: _data[i].title != undefined ? _data[i].title : null
-		}; //new Date(Date.parse())
+			name: _name,
+			indexLabel: _name,
+		}; 
 		obj.dataPoints.push(point);
 	}
 	return obj;
@@ -28,7 +30,6 @@ function newChart(id, Name, XName, YName, markerType, dataSeries)
 	for (var i = 0; i < dataSeries.length; i++)
 		data.push(dataSeries[i]);
 
-	//Better to construct options first and then pass it as a parameter
 	var options = {
 		zoomEnabled: true,
 		animationEnabled: true,
@@ -36,7 +37,7 @@ function newChart(id, Name, XName, YName, markerType, dataSeries)
 		title: { text: Name },
 		axisX: { title: XName, crosshair: { enabled: true, snapToDataPoint: true } },
 		axisY: { title: YName, includeZero: true, crosshair: { enabled: true } },
-		data: data  // random data
+		data: data  
 	};
 
 	return new CanvasJS.Chart(id, options);

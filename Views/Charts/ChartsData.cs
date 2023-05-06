@@ -1,51 +1,64 @@
-﻿namespace demo.Views.Charts
-{
-	public class TimePoint : ChartPoint<DateTime, double> { };
-	public class ValuePoint : ChartPoint<double, double> { };
+﻿using demo.Models.Database.Tables;
 
+namespace demo.Views.Charts
+{
 	public class ChartData
 	{
-		public IEnumerable<ValuePoint> LinearHouses;
+		public IEnumerable<ChartPoint> LinearHouses;
 
-		public IEnumerable<ValuePoint> LinearPlants;
+		public IEnumerable<ChartPoint> LinearPlants;
 
-		public TimePoint CityForecast;
+		public ChartPoint CityForecast;
 
 		public CityConsumption CityConsumptions;
 
-		public IEnumerable<ValuePoint> ConsumptionsPie;
+		public IEnumerable<ChartPoint> ConsumptionsPie;
 	}
 
-	public class NameValue
+	public class ChartPoint
 	{
-		public string title;
-
 		public double x;
 
 		public double y;
+
+		public string title;
+
+		public DateTime date;
+
+		public static ChartPoint FromHouse(HouseConsumptionsTable house)
+		{
+			return new ChartPoint() {
+				x = house.Weather,
+				y = house.Consumption,
+				title = house.Consumer.Name,
+				date = house.Date
+			};
+		}
+		public static ChartPoint FromPlants(PlantsConsumptionsTable plants)
+		{
+			return new ChartPoint() {
+				x = plants.Price,
+				y = plants.Consumption,
+				title = plants.Consumer.Name,
+				date = plants.Date
+			};
+		}
 	}
 
 	public class CityConsumption
 	{
-		public IEnumerable<ValuePoint> Sum;
+		public IEnumerable<ChartPoint> Sum;
 
-		public IEnumerable<NameValue> Houses;
+		public IEnumerable<ChartPoint> Houses;
 
-		public IEnumerable<NameValue> Plants;
+		public IEnumerable<ChartPoint> Plants;
 
-		public IEnumerable<NameValue> Pie;
-
+		public IEnumerable<ChartPoint> Pie;
 	}
 
 	public class ChartsLimits
 	{
 		public DateTime from;
 		public DateTime to;
-	}
-
-	public class ChartPoint<X,Y>
-	{
-		public X x;
-		public Y y;
 	}
 }
