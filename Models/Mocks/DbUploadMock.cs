@@ -21,7 +21,7 @@ namespace demo.Models.Mocks
             try
             {
                 if (data.File == null)
-                return BadRequest(new { error = "файл не может отсутствовать" });
+                    return BadRequest(new { error = "файл не может отсутствовать" });
 
                 if (data.File.Length == 0)
                     return BadRequest(new { error = "размер файла должен быть больше 0" });
@@ -47,77 +47,95 @@ namespace demo.Models.Mocks
             }
             catch (Exception e)
             {
-                return BadRequest(new { error = $"ошибка распознавания файла {e.Message}" });
+                return BadRequest(new { error = $"ошибка распознавания файла \n{e.Message}" });
             }
         }
 
         public HouseConsumersTable ParseHouseConsumer(XElement element, DateTime _UploadDateTime)
         {
-            var consumer = new HouseConsumersTable()
+            try
             {
-                Name = element.Element("Name").Value,
-                ConsumerId = Int32.Parse(element.Element("ConsumerId").Value),
-                UploadDateTime = _UploadDateTime,
-                Consumptions = new List<HouseConsumptionsTable>()
-            };
-                        
-            foreach (var consumption in element.Elements("consumptions"))
-            {
-                consumer.Consumptions.Add(new HouseConsumptionsTable()
-                {
-                    Date = DateTime.Parse(consumption.Element("Date").Value),
-                    Weather = float.Parse(consumption.Element("Weather").Value, CultureInfo.InvariantCulture),
-                    Consumption = double.Parse(consumption.Element("Consumption").Value, CultureInfo.InvariantCulture)
-                });
-            }
+				var consumer = new HouseConsumersTable()
+				{
+					Name = element.Element("Name").Value,
+					ConsumerId = Int32.Parse(element.Element("ConsumerId").Value),
+					UploadDateTime = _UploadDateTime,
+					Consumptions = new List<HouseConsumptionsTable>()
+				};
 
-            return consumer;
+				foreach (var consumption in element.Elements("consumptions"))
+				{
+					consumer.Consumptions.Add(new HouseConsumptionsTable()
+					{
+						Date = DateTime.Parse(consumption.Element("Date").Value),
+						Weather = float.Parse(consumption.Element("Weather").Value, CultureInfo.InvariantCulture),
+						Consumption = double.Parse(consumption.Element("Consumption").Value, CultureInfo.InvariantCulture)
+					});
+				}
+				return consumer;
+			}
+            catch(Exception e)
+			{
+                throw new Exception($"Искалючение в ParseHouseConsumer: \n{e.Message}");
+			}
         }
 
         public PlantsConsumersTable ParsePlantsConsumer(XElement element, DateTime _UploadDateTime)
         {
-            var consumer = new PlantsConsumersTable()
-            {
-                Name = element.Element("Name").Value,
-                ConsumerId = Int32.Parse(element.Element("ConsumerId").Value),
-                UploadDateTime = _UploadDateTime,
-                Consumptions = new List<PlantsConsumptionsTable>()
-            };
-
-            foreach (var consumption in element.Elements("consumptions"))
-            {
-                consumer.Consumptions.Add(new PlantsConsumptionsTable()
+			try
+			{
+				var consumer = new PlantsConsumersTable()
                 {
-                    Date = DateTime.Parse(consumption.Element("Date").Value),
-                    Price = double.Parse(consumption.Element("Price").Value, CultureInfo.InvariantCulture),
-                    Consumption = double.Parse(consumption.Element("Consumption").Value, CultureInfo.InvariantCulture)
-                });
-            }
+                    Name = element.Element("Name").Value,
+                    ConsumerId = Int32.Parse(element.Element("ConsumerId").Value),
+                    UploadDateTime = _UploadDateTime,
+                    Consumptions = new List<PlantsConsumptionsTable>()
+                };
 
-            return consumer;
-        }
+                foreach (var consumption in element.Elements("consumptions"))
+                {
+                    consumer.Consumptions.Add(new PlantsConsumptionsTable()
+                    {
+                        Date = DateTime.Parse(consumption.Element("Date").Value),
+                        Price = double.Parse(consumption.Element("Price").Value, CultureInfo.InvariantCulture),
+                        Consumption = double.Parse(consumption.Element("Consumption").Value, CultureInfo.InvariantCulture)
+                    });
+                }
+                return consumer;
+			}
+			catch (Exception e)
+			{
+				throw new Exception($"Искалючение в ParsePlantsConsumer: \n{e.Message}");
+			}
+		}
 
         public void UploadXmlToDatabase(XDocument xml)
         {
-            var UploadTime = DateTime.Now;
-            foreach (var element in xml.Root.Elements())
-            {            
-                switch (element.Name.ToString())
-                {
-                    case "houses":
-                        _dbContext.HouseConsumers.Add(ParseHouseConsumer(element, UploadTime));
-                        break;
+            try 
+            {                
+                var UploadTime = DateTime.Now;
+                foreach (var element in xml.Root.Elements())
+                {            
+                    switch (element.Name.ToString())
+                    {
+                        case "houses":
+                            _dbContext.HouseConsumers.Add(ParseHouseConsumer(element, UploadTime));
+                            break;
 
-                    case "plants":
-                        _dbContext.PlantsConsumers.Add(ParsePlantsConsumer(element, UploadTime));
-                        break;
+                        case "plants":
+                            _dbContext.PlantsConsumers.Add(ParsePlantsConsumer(element, UploadTime));
+                            break;
                         
-                    default:
-                        throw new Exception($"неизвестный элемент {element.Name}");                            
-                }            
-            }
-
-            _dbContext.SaveChanges();
+                        default:
+                            throw new Exception($"неизвестный элемент {element.Name}");                            
+                    }            
+                }
+                _dbContext.SaveChanges();
+		    }
+			catch (Exception e)
+			{
+				throw new Exception($"Искалючение в UploadXmlToDatabase: \n{e.Message}");
+	        }
         }
     }
 }
